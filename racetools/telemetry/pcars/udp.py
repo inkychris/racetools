@@ -294,3 +294,28 @@ def packet_structure(packet_type: int):
         return _packet_type[packet_type]
     except KeyError:
         raise UnrecognisedPacketType(packet_type)
+
+
+class PacketSizeMismatch(ValueError):
+    """
+    Raised when trying to create a packet structure
+    from data that is not the correct size.
+    """
+    def __init__(self, expected, actual):
+        self.expected = expected
+        self.actual = actual
+        super().__init__(f'expected packet data size of {self.expected}, got {self.actual}')
+
+
+def packet_from_bytes(data: bytes):
+    """
+    Create UDP packet structure from byte array.
+    Raises a ``PacketSizeMismatch`` if the size of ``data``
+    does not match the size of the struct
+    determined by the packet type value pulled from ``data``.
+    """
+    base_packet = PacketBase.from_buffer_copy(data)
+    struct = packet_structure(base_packet.packet_type)
+    if len(data) != struct.SIZE:
+        raise PacketSizeMismatch(struct.SIZE, len(data))
+    return struct.from_buffer_copy(data)
