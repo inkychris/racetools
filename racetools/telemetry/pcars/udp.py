@@ -15,6 +15,14 @@ VEHICLES_PER_PACKET = 16
 CLASSES_SUPPORTED_PER_PACKET = 60
 
 
+class Packet(ctypes.Structure):
+    """
+    Base class for UDP packet structures.
+    """
+    SIZE = 0
+    PACKET_TYPE = None
+
+
 class PacketBase(ctypes.Structure):
     SIZE = 12
 
@@ -28,7 +36,7 @@ class PacketBase(ctypes.Structure):
     ]
 
 
-class TelemetryData(ctypes.Structure):
+class TelemetryData(Packet):
     SIZE = 555  # SMS header off by 1
     PACKET_TYPE = 0
 
@@ -105,7 +113,7 @@ class TelemetryData(ctypes.Structure):
     ]
 
 
-class RaceData(ctypes.Structure):
+class RaceData(Packet):
     SIZE = 308
     PACKET_TYPE = 1
 
@@ -129,7 +137,7 @@ class RaceData(ctypes.Structure):
     ]
 
 
-class ParticipantsData(ctypes.Structure):
+class ParticipantsData(Packet):
     SIZE = 1136
     PACKET_TYPE = 2
 
@@ -162,7 +170,7 @@ class ParticipantsInfo(ctypes.Structure):
     ]
 
 
-class TimingsData(ctypes.Structure):
+class TimingsData(Packet):
     SIZE = 1059
     PACKET_TYPE = 3
 
@@ -180,7 +188,7 @@ class TimingsData(ctypes.Structure):
     ]
 
 
-class GameStateData(ctypes.Structure):
+class GameStateData(Packet):
     SIZE = 24
     PACKET_TYPE = 4
 
@@ -217,7 +225,7 @@ class ParticipantsStats(ctypes.Structure):
     ]
 
 
-class TimeStatsData(ctypes.Structure):
+class TimeStatsData(Packet):
     SIZE = 1040  # SMS header off by 16
     PACKET_TYPE = 7
 
@@ -236,7 +244,7 @@ class VehicleInfo(ctypes.Structure):
     ]
 
 
-class ParticipantVehicleNamesData(ctypes.Structure):
+class ParticipantVehicleNamesData(Packet):
     SIZE = 1164
     PACKET_TYPE = 8
 
@@ -253,10 +261,9 @@ class ClassInfo(ctypes.Structure):
     ]
 
 
-#  SMS UDP definitions packet type not specified
-class VehicleClassNamesData(ctypes.Structure):
+class VehicleClassNamesData(Packet):
     SIZE = 1452
-    PACKET_TYPE = None
+    # packet type not specified in SMS header
 
     _fields_ = [
         *PacketBase._fields_,
