@@ -1,4 +1,5 @@
 import ctypes
+import typing
 
 import racetools.errors
 
@@ -283,7 +284,7 @@ _packet_type = {
         ParticipantVehicleNamesData)}
 
 
-def packet_structure(packet_type: int):
+def packet_structure(packet_type: int) -> typing.Type[Packet]:
     """
     Return the respective packet structure class
     based on the packet type value provided.
@@ -296,7 +297,7 @@ def packet_structure(packet_type: int):
         raise racetools.errors.UnrecognisedPacketType(packet_type)
 
 
-def packet_from_bytes(data: bytes):
+def packet_from_bytes(data: bytes) -> Packet:
     """
     Create UDP packet structure from byte array.
     Raises a ``PacketSizeMismatch`` if the size of ``data``
