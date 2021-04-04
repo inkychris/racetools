@@ -309,3 +309,41 @@ def packet_from_bytes(data: bytes) -> Packet:
     if len(data) != struct.SIZE:
         raise racetools.errors.PacketSizeMismatch(struct.SIZE, len(data))
     return struct.from_buffer_copy(data)
+
+
+class PacketStream:
+    """
+    A wrapper around a binary IO stream
+    to read/write sequential packets.
+    """
+    def __init__(self, stream: typing.BinaryIO):
+        self._stream = stream
+
+    def receive(self) -> [Packet, None]:
+        """
+        Read a header and respective packet data from the stream
+        and return an instantiated ``Packet`` object.
+        Returns ``None`` if no bytes are returned
+        when attempting to read the packet header from the stream.
+        Raises ``PacketSizeMismatch`` or ``UnrecognisedPacketType``
+        if packet object instantiation fails.
+        """
+        packet_size_data = self._stream.read(2)
+        if not packet_size_data:
+            return None
+        packet_size = int.from_bytes(packet_size_data, 'little')
+        packet_data = self._stream.read(packet_size)
+        return packet_from_bytes(packet_data)
+
+    def send(self, packet: Packet) -> None:
+        """
+        Write a ``Packet`` to the stream
+        including an appropriate header.
+        Raises a ``StreamWriteError`` if number of bytes written
+        does not match the size of the packet and header.
+        """
+        packet_size_data = packet.SIZE.to_bytes(2, 'little')
+        write_count = self._stream.write(packet_size_data)
+        write_count += self._stream.write(packet)
+        if write_count != packet.SIZE + 2:
+            raise racetools.errors.StreamWriteError(packet.SIZE + 2, write_count)
