@@ -1,5 +1,7 @@
 import ctypes
 
+import racetools.errors
+
 PORT = 5606
 MAX_PACKET_SIZE = 1500
 TYRE_NAME_LENGTH_MAX = 40
@@ -274,15 +276,6 @@ _packet_type = {
         ParticipantVehicleNamesData)}
 
 
-class UnrecognisedPacketType(ValueError):
-    """
-    Raised when numerical packet type
-    does not correspond to a packet structure.
-    """
-    def __init__(self, value):
-        super().__init__(f'unrecognised packet type value {value}')
-
-
 def packet_structure(packet_type: int):
     """
     Return the respective packet structure class
@@ -293,18 +286,7 @@ def packet_structure(packet_type: int):
     try:
         return _packet_type[packet_type]
     except KeyError:
-        raise UnrecognisedPacketType(packet_type)
-
-
-class PacketSizeMismatch(ValueError):
-    """
-    Raised when trying to create a packet structure
-    from data that is not the correct size.
-    """
-    def __init__(self, expected, actual):
-        self.expected = expected
-        self.actual = actual
-        super().__init__(f'expected packet data size of {self.expected}, got {self.actual}')
+        raise racetools.errors.UnrecognisedPacketType(packet_type)
 
 
 def packet_from_bytes(data: bytes):
@@ -317,5 +299,5 @@ def packet_from_bytes(data: bytes):
     base_packet = PacketBase.from_buffer_copy(data)
     struct = packet_structure(base_packet.packet_type)
     if len(data) != struct.SIZE:
-        raise PacketSizeMismatch(struct.SIZE, len(data))
+        raise racetools.errors.PacketSizeMismatch(struct.SIZE, len(data))
     return struct.from_buffer_copy(data)

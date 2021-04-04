@@ -1,6 +1,7 @@
 import ctypes
 import unittest
 
+import racetools.errors
 import racetools.telemetry.pcars.udp as pcars_udp
 
 
@@ -62,6 +63,6 @@ class TestStructFromTypeValue(unittest.TestCase):
         self.assertStructMapping(8, pcars_udp.ParticipantVehicleNamesData)
 
     def test_invalid_value(self):
-        with self.assertRaises(pcars_udp.UnrecognisedPacketType) as ex:
+        with self.assertRaises(racetools.errors.UnrecognisedPacketType) as ex:
             pcars_udp.packet_structure(9)
         self.assertIn('9', str(ex.exception))
