@@ -260,3 +260,37 @@ class VehicleClassNamesData(ctypes.Structure):
         *PacketBase._fields_,
         ('classes', ClassInfo * CLASSES_SUPPORTED_PER_PACKET),
     ]
+
+
+_packet_type = {
+    struct.PACKET_TYPE: struct
+    for struct in (
+        TelemetryData,
+        RaceData,
+        ParticipantsData,
+        TimingsData,
+        GameStateData,
+        TimeStatsData,
+        ParticipantVehicleNamesData)}
+
+
+class UnrecognisedPacketType(ValueError):
+    """
+    Raised when numerical packet type
+    does not correspond to a packet structure.
+    """
+    def __init__(self, value):
+        super().__init__(f'unrecognised packet type value {value}')
+
+
+def packet_structure(packet_type: int):
+    """
+    Return the respective packet structure class
+    based on the packet type value provided.
+    Raises an ``UnrecognisedPacketType`` exception
+    if ``packet_type`` does not correspond to a packet structure.
+    """
+    try:
+        return _packet_type[packet_type]
+    except KeyError:
+        raise UnrecognisedPacketType(packet_type)
