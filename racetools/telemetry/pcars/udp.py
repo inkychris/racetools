@@ -1,3 +1,4 @@
+from __future__ import annotations
 import ctypes
 import typing
 
@@ -29,7 +30,7 @@ class PacketBase(ctypes.Structure):
         ('packet_version', ctypes.c_uint8),
     ]
 
-    def struct_type(self):
+    def struct_type(self) -> typing.Type[Packet]:
         """
         Return the specialised ``Packet`` class
         based on the content of the packet base.
