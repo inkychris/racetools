@@ -21,12 +21,12 @@ class PacketBase(ctypes.Structure):
     Base class for UDP packet structures.
     """
     _fields_ = [
-        ('packet_number', ctypes.c_uint),
-        ('category_packet_number', ctypes.c_uint),
-        ('partial_packet_index', ctypes.c_ubyte),
-        ('partial_packet_number', ctypes.c_ubyte),
-        ('packet_type', ctypes.c_ubyte),
-        ('packet_version', ctypes.c_ubyte),
+        ('packet_number', ctypes.c_uint32),
+        ('category_packet_number', ctypes.c_uint32),
+        ('partial_packet_index', ctypes.c_uint8),
+        ('partial_packet_number', ctypes.c_uint8),
+        ('packet_type', ctypes.c_uint8),
+        ('packet_version', ctypes.c_uint8),
     ]
 
     def struct_type(self):
@@ -75,29 +75,29 @@ class TelemetryData(PackedPacket):
     SIZE = 559
 
     _fields_ = [
-        ('viewed_participant_index', ctypes.c_char),
-        ('unfiltered_throttle', ctypes.c_ubyte),
-        ('unfiltered_brake', ctypes.c_ubyte),
-        ('unfiltered_steering', ctypes.c_char),
-        ('unfiltered_clutch', ctypes.c_ubyte),
-        ('car_flags', ctypes.c_ubyte),
-        ('oil_temp_celsius', ctypes.c_short),
-        ('oil_pressure_kpa', ctypes.c_ushort),
-        ('water_temp_celsius', ctypes.c_short),
-        ('water_pressure_kpa', ctypes.c_ushort),
-        ('fuel_pressure_kpa', ctypes.c_ushort),
-        ('fuel_capacity', ctypes.c_ubyte),
-        ('brake', ctypes.c_ubyte),
-        ('throttle', ctypes.c_ubyte),
-        ('clutch', ctypes.c_ubyte),
+        ('viewed_participant_index', ctypes.c_int8),
+        ('unfiltered_throttle', ctypes.c_uint8),
+        ('unfiltered_brake', ctypes.c_uint8),
+        ('unfiltered_steering', ctypes.c_int8),
+        ('unfiltered_clutch', ctypes.c_uint8),
+        ('car_flags', ctypes.c_uint8),
+        ('oil_temp_celsius', ctypes.c_int16),
+        ('oil_pressure_kpa', ctypes.c_uint16),
+        ('water_temp_celsius', ctypes.c_int16),
+        ('water_pressure_kpa', ctypes.c_uint16),
+        ('fuel_pressure_kpa', ctypes.c_uint16),
+        ('fuel_capacity', ctypes.c_uint8),
+        ('brake', ctypes.c_uint8),
+        ('throttle', ctypes.c_uint8),
+        ('clutch', ctypes.c_uint8),
         ('fuel_level', ctypes.c_float),
         ('speed', ctypes.c_float),
-        ('rpm', ctypes.c_ushort),
-        ('max_rpm', ctypes.c_ushort),
-        ('steering', ctypes.c_char),
-        ('gear_num_gears', ctypes.c_ubyte),
-        ('boost_amount', ctypes.c_ubyte),
-        ('crash_state', ctypes.c_ubyte),
+        ('rpm', ctypes.c_uint16),
+        ('max_rpm', ctypes.c_uint16),
+        ('steering', ctypes.c_int8),
+        ('gear_num_gears', ctypes.c_uint8),
+        ('boost_amount', ctypes.c_uint8),
+        ('crash_state', ctypes.c_uint8),
         ('odometer_km', ctypes.c_float),
         ('orientation', ctypes.c_float * 3),
         ('local_velocity', ctypes.c_float * 3),
@@ -106,43 +106,43 @@ class TelemetryData(PackedPacket):
         ('local_acceleration', ctypes.c_float * 3),
         ('world_acceleration', ctypes.c_float * 3),
         ('extents_centre', ctypes.c_float * 3),
-        ('tyre_flags', ctypes.c_ubyte * 4),
-        ('terrain', ctypes.c_ubyte * 4),
+        ('tyre_flags', ctypes.c_uint8 * 4),
+        ('terrain', ctypes.c_uint8 * 4),
         ('tyre_y', ctypes.c_float * 4),
         ('tyre_rps', ctypes.c_float * 4),
-        ('tyre_temp', ctypes.c_ubyte * 4),
+        ('tyre_temp', ctypes.c_uint8 * 4),
         ('tyre_height_above_ground', ctypes.c_float * 4),
-        ('tyre_wear', ctypes.c_ubyte * 4),
-        ('brake_damage', ctypes.c_ubyte * 4),
-        ('suspension_damage', ctypes.c_ubyte * 4),
-        ('brake_temp_celsius', ctypes.c_short * 4),
-        ('tyre_tread_temp', ctypes.c_ushort * 4),
-        ('tyre_layer_temp', ctypes.c_ushort * 4),
-        ('tyre_carcass_temp', ctypes.c_ushort * 4),
-        ('tyre_rim_temp', ctypes.c_ushort * 4),
-        ('tyre_internal_air_temp', ctypes.c_ushort * 4),
-        ('tyre_temp_left', ctypes.c_ushort * 4),
-        ('tyre_temp_center', ctypes.c_ushort * 4),
-        ('tyre_temp_right', ctypes.c_ushort * 4),
+        ('tyre_wear', ctypes.c_uint8 * 4),
+        ('brake_damage', ctypes.c_uint8 * 4),
+        ('suspension_damage', ctypes.c_uint8 * 4),
+        ('brake_temp_celsius', ctypes.c_int16 * 4),
+        ('tyre_tread_temp', ctypes.c_uint16 * 4),
+        ('tyre_layer_temp', ctypes.c_uint16 * 4),
+        ('tyre_carcass_temp', ctypes.c_uint16 * 4),
+        ('tyre_rim_temp', ctypes.c_uint16 * 4),
+        ('tyre_internal_air_temp', ctypes.c_uint16 * 4),
+        ('tyre_temp_left', ctypes.c_uint16 * 4),
+        ('tyre_temp_center', ctypes.c_uint16 * 4),
+        ('tyre_temp_right', ctypes.c_uint16 * 4),
         ('wheel_local_position_y', ctypes.c_float * 4),
         ('ride_height', ctypes.c_float * 4),
         ('suspension_travel', ctypes.c_float * 4),
         ('suspension_velocity', ctypes.c_float * 4),
-        ('suspension_ride_height', ctypes.c_ushort * 4),
-        ('air_pressure', ctypes.c_ushort * 4),
+        ('suspension_ride_height', ctypes.c_uint16 * 4),
+        ('air_pressure', ctypes.c_uint16 * 4),
         ('engine_speed', ctypes.c_float),
         ('engine_torque', ctypes.c_float),
-        ('wings', ctypes.c_ubyte * 2),
-        ('hand_brake', ctypes.c_ubyte),
-        ('aero_damage', ctypes.c_ubyte),
-        ('engine_damage', ctypes.c_ubyte),
-        ('joy_pad0', ctypes.c_uint),
-        ('d_pad', ctypes.c_ubyte),
+        ('wings', ctypes.c_uint8 * 2),
+        ('hand_brake', ctypes.c_uint8),
+        ('aero_damage', ctypes.c_uint8),
+        ('engine_damage', ctypes.c_uint8),
+        ('joy_pad0', ctypes.c_uint32),
+        ('d_pad', ctypes.c_uint8),
         ('tyre_compound', (ctypes.c_char * TYRE_NAME_LENGTH_MAX) * 4),
         ('turbo_boost_pressure', ctypes.c_float),
         ('full_position', ctypes.c_float * 3),
-        ('brake_bias', ctypes.c_ubyte),
-        ('tick_count', ctypes.c_uint)
+        ('brake_bias', ctypes.c_uint8),
+        ('tick_count', ctypes.c_uint32)
     ]
 
 
@@ -163,8 +163,8 @@ class RaceData(UnpackedPacket):
         ('track_variation', ctypes.c_char * TRACK_NAME_LENGTH_MAX),
         ('translated_track_location', ctypes.c_char * TRACK_NAME_LENGTH_MAX),
         ('translated_track_variation', ctypes.c_char * TRACK_NAME_LENGTH_MAX),
-        ('laps_time_in_event', ctypes.c_ushort),
-        ('enforced_pit_stop_lap', ctypes.c_char),
+        ('laps_time_in_event', ctypes.c_uint16),
+        ('enforced_pit_stop_lap', ctypes.c_int8),
     ]
 
 
@@ -172,29 +172,29 @@ class ParticipantsData(UnpackedPacket):
     SIZE = 1136
 
     _fields_ = [
-        ('participants_changed_timestamp', ctypes.c_uint),
+        ('participants_changed_timestamp', ctypes.c_uint32),
         ('name', (ctypes.c_char * PARTICIPANT_NAME_LENGTH_MAX) * PARTICIPANTS_PER_PACKET),
-        ('nationality', ctypes.c_uint * PARTICIPANTS_PER_PACKET),
-        ('index', ctypes.c_ushort * PARTICIPANTS_PER_PACKET),
+        ('nationality', ctypes.c_uint32 * PARTICIPANTS_PER_PACKET),
+        ('index', ctypes.c_uint16 * PARTICIPANTS_PER_PACKET),
     ]
 
 
 class ParticipantsInfo(ctypes.Structure):
     _pack_ = 1
     _fields_ = [
-        ('world_position', ctypes.c_short * 3),
-        ('orientation', ctypes.c_short * 3),
-        ('current_lap_distance', ctypes.c_ushort),
-        ('race_position', ctypes.c_ubyte),
-        ('sector', ctypes.c_ubyte),
-        ('highest_flag', ctypes.c_ubyte),
-        ('pit_mode_schedule', ctypes.c_ubyte),
-        ('car_index', ctypes.c_ushort),
-        ('race_state', ctypes.c_ubyte),
-        ('current_lap', ctypes.c_ubyte),
+        ('world_position', ctypes.c_int16 * 3),
+        ('orientation', ctypes.c_int16 * 3),
+        ('current_lap_distance', ctypes.c_uint16),
+        ('race_position', ctypes.c_uint8),
+        ('sector', ctypes.c_uint8),
+        ('highest_flag', ctypes.c_uint8),
+        ('pit_mode_schedule', ctypes.c_uint8),
+        ('car_index', ctypes.c_uint16),
+        ('race_state', ctypes.c_uint8),
+        ('current_lap', ctypes.c_uint8),
         ('current_time', ctypes.c_float),
         ('current_sector_time', ctypes.c_float),
-        ('participant_index', ctypes.c_ushort),
+        ('participant_index', ctypes.c_uint16),
 
     ]
 
@@ -203,15 +203,15 @@ class TimingsData(PackedPacket):
     SIZE = 1063
 
     _fields_ = [
-        ('num_participants', ctypes.c_char),
-        ('participants_changed_timestamp', ctypes.c_uint),
+        ('num_participants', ctypes.c_int8),
+        ('participants_changed_timestamp', ctypes.c_uint32),
         ('event_time_remaining', ctypes.c_float),
         ('split_time_ahead', ctypes.c_float),
         ('split_time_behind', ctypes.c_float),
         ('split_time', ctypes.c_float),
         ('participants', ParticipantsInfo * STREAMER_PARTICIPANTS_SUPPORTED),
-        ('local_participant_index', ctypes.c_ushort),
-        ('tick_count', ctypes.c_uint),
+        ('local_participant_index', ctypes.c_uint16),
+        ('tick_count', ctypes.c_uint32),
     ]
 
 
@@ -219,15 +219,15 @@ class GameStateData(UnpackedPacket):
     SIZE = 24
 
     _fields_ = [
-        ('build_version_number', ctypes.c_ushort),
-        ('game_state', ctypes.c_char),
-        ('ambient_temperature', ctypes.c_char),
-        ('track_temperature', ctypes.c_char),
-        ('rain_density', ctypes.c_ubyte),
-        ('snow_density', ctypes.c_ubyte),
-        ('wind_speed', ctypes.c_char),
-        ('wind_direction_x', ctypes.c_char),
-        ('wind_direction_y', ctypes.c_char),
+        ('build_version_number', ctypes.c_uint16),
+        ('game_state', ctypes.c_int8),
+        ('ambient_temperature', ctypes.c_int8),
+        ('track_temperature', ctypes.c_int8),
+        ('rain_density', ctypes.c_uint8),
+        ('snow_density', ctypes.c_uint8),
+        ('wind_speed', ctypes.c_int8),
+        ('wind_direction_x', ctypes.c_int8),
+        ('wind_direction_y', ctypes.c_int8),
     ]
 
 
@@ -239,8 +239,8 @@ class ParticipantStatsInfo(ctypes.Structure):
         ('fastest_sector1_time', ctypes.c_float),
         ('fastest_sector2_time', ctypes.c_float),
         ('fastest_sector3_time', ctypes.c_float),
-        ('participant_online_rep', ctypes.c_uint),
-        ('participant_index', ctypes.c_ushort),
+        ('participant_online_rep', ctypes.c_uint32),
+        ('participant_index', ctypes.c_uint16),
     ]
 
 
@@ -254,15 +254,15 @@ class TimeStatsData(UnpackedPacket):
     SIZE = 1040  # SMS header off by 16
 
     _fields_ = [
-        ('participants_changed_timestamp', ctypes.c_uint),
+        ('participants_changed_timestamp', ctypes.c_uint32),
         ('stats', ParticipantsStats),
     ]
 
 
 class VehicleInfo(ctypes.Structure):
     _fields_ = [
-        ('index', ctypes.c_ushort),
-        ('class', ctypes.c_uint),
+        ('index', ctypes.c_uint16),
+        ('class', ctypes.c_uint32),
         ('name', ctypes.c_char * VEHICLE_NAME_LENGTH_MAX),
     ]
 
@@ -277,7 +277,7 @@ class ParticipantVehicleNamesData(UnpackedPacket):
 
 class ClassInfo(ctypes.Structure):
     _fields_ = [
-        ('class_index', ctypes.c_uint),
+        ('class_index', ctypes.c_uint32),
         ('name', ctypes.c_char * CLASS_NAME_LENGTH_MAX),
     ]
 
