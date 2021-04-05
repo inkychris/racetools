@@ -16,17 +16,10 @@ VEHICLES_PER_PACKET = 16
 CLASSES_SUPPORTED_PER_PACKET = 60
 
 
-class Packet(ctypes.Structure):
+class PacketBase(ctypes.Structure):
     """
     Base class for UDP packet structures.
     """
-    SIZE = 0
-    PACKET_TYPE = None
-
-
-class PacketBase(ctypes.Structure):
-    SIZE = 12
-
     _fields_ = [
         ('packet_number', ctypes.c_uint),
         ('category_packet_number', ctypes.c_uint),
@@ -36,14 +29,52 @@ class PacketBase(ctypes.Structure):
         ('packet_version', ctypes.c_ubyte),
     ]
 
+    def struct_type(self):
+        """
+        Return the specialised ``Packet`` class
+        based on the content of the packet base.
+        Raises an ``UnrecognisedPacketType`` exception
+        if the struct type cannot be determined.
+        """
+        if self.packet_type == 0:
+            return TelemetryData
+        elif self.packet_type == 1:
+            return RaceData
+        elif self.packet_type == 2:
+            return ParticipantsData
+        elif self.packet_type == 3:
+            return TimingsData
+        elif self.packet_type == 4:
+            return GameStateData
+        elif self.packet_type == 7:
+            return TimeStatsData
+        elif self.packet_type == 8:
+            if self.partial_packet_index < self.partial_packet_number:
+                return ParticipantVehicleNamesData
+            elif self.partial_packet_index == self.partial_packet_number:
+                return VehicleClassNamesData
+        raise racetools.errors.UnrecognisedPacketType(self.packet_type)
 
-class TelemetryData(Packet):
-    SIZE = 555  # SMS header off by 1
-    PACKET_TYPE = 0
 
+class Packet(ctypes.Structure):
+    SIZE = None
+
+
+class UnpackedPacket(Packet):
+    SIZE = 12
+    _fields_ = [('base', PacketBase)]
+
+
+class PackedPacket(Packet):
+    SIZE = 12
     _pack_ = 1
+    _fields_ = [('base', PacketBase)]
+
+
+class TelemetryData(PackedPacket):
+    SIZE = 559
+
     _fields_ = [
-        *PacketBase._fields_,
         ('viewed_participant_index', ctypes.c_char),
         ('unfiltered_throttle', ctypes.c_ubyte),
         ('unfiltered_brake', ctypes.c_ubyte),
@@ -111,15 +142,14 @@ class TelemetryData(Packet):
         ('turbo_boost_pressure', ctypes.c_float),
         ('full_position', ctypes.c_float * 3),
         ('brake_bias', ctypes.c_ubyte),
+        ('tick_count', ctypes.c_uint)
     ]
 
 
-class RaceData(Packet):
+class RaceData(UnpackedPacket):
     SIZE = 308
-    PACKET_TYPE = 1
 
     _fields_ = [
-        *PacketBase._fields_,
         ('world_fastest_lap_time', ctypes.c_float),
         ('personal_fastest_lap_time', ctypes.c_float),
         ('personal_fastest_sector1_time', ctypes.c_float),
@@ -138,12 +168,10 @@ class RaceData(Packet):
     ]
 
 
-class ParticipantsData(Packet):
+class ParticipantsData(UnpackedPacket):
     SIZE = 1136
-    PACKET_TYPE = 2
 
     _fields_ = [
-        *PacketBase._fields_,
         ('participants_changed_timestamp', ctypes.c_uint),
         ('name', (ctypes.c_char * PARTICIPANT_NAME_LENGTH_MAX) * PARTICIPANTS_PER_PACKET),
         ('nationality', ctypes.c_uint * PARTICIPANTS_PER_PACKET),
@@ -171,13 +199,10 @@ class ParticipantsInfo(ctypes.Structure):
     ]
 
 
-class TimingsData(Packet):
-    SIZE = 1059
-    PACKET_TYPE = 3
+class TimingsData(PackedPacket):
+    SIZE = 1063
 
-    _pack_ = 1
     _fields_ = [
-        *PacketBase._fields_,
         ('num_participants', ctypes.c_char),
         ('participants_changed_timestamp', ctypes.c_uint),
         ('event_time_remaining', ctypes.c_float),
@@ -186,15 +211,14 @@ class TimingsData(Packet):
         ('split_time', ctypes.c_float),
         ('participants', ParticipantsInfo * STREAMER_PARTICIPANTS_SUPPORTED),
         ('local_participant_index', ctypes.c_ushort),
+        ('tick_count', ctypes.c_uint),
     ]
 
 
-class GameStateData(Packet):
+class GameStateData(UnpackedPacket):
     SIZE = 24
-    PACKET_TYPE = 4
 
     _fields_ = [
-        *PacketBase._fields_,
         ('build_version_number', ctypes.c_ushort),
         ('game_state', ctypes.c_char),
         ('ambient_temperature', ctypes.c_char),
@@ -226,12 +250,10 @@ class ParticipantsStats(ctypes.Structure):
     ]
 
 
-class TimeStatsData(Packet):
+class TimeStatsData(UnpackedPacket):
     SIZE = 1040  # SMS header off by 16
-    PACKET_TYPE = 7
 
     _fields_ = [
-        *PacketBase._fields_,
         ('participants_changed_timestamp', ctypes.c_uint),
         ('stats', ParticipantsStats),
     ]
@@ -245,12 +267,10 @@ class VehicleInfo(ctypes.Structure):
     ]
 
 
-class ParticipantVehicleNamesData(Packet):
+class ParticipantVehicleNamesData(UnpackedPacket):
     SIZE = 1164
-    PACKET_TYPE = 8
 
     _fields_ = [
-        *PacketBase._fields_,
         ('vehicles', VehicleInfo * VEHICLES_PER_PACKET),
     ]
 
@@ -262,39 +282,12 @@ class ClassInfo(ctypes.Structure):
     ]
 
 
-class VehicleClassNamesData(Packet):
+class VehicleClassNamesData(UnpackedPacket):
     SIZE = 1452
-    # packet type not specified in SMS header
 
     _fields_ = [
-        *PacketBase._fields_,
         ('classes', ClassInfo * CLASSES_SUPPORTED_PER_PACKET),
     ]
-
-
-_packet_type = {
-    struct.PACKET_TYPE: struct
-    for struct in (
-        TelemetryData,
-        RaceData,
-        ParticipantsData,
-        TimingsData,
-        GameStateData,
-        TimeStatsData,
-        ParticipantVehicleNamesData)}
-
-
-def packet_structure(packet_type: int) -> typing.Type[Packet]:
-    """
-    Return the respective packet structure class
-    based on the packet type value provided.
-    Raises an ``UnrecognisedPacketType`` exception
-    if ``packet_type`` does not correspond to a packet structure.
-    """
-    try:
-        return _packet_type[packet_type]
-    except KeyError:
-        raise racetools.errors.UnrecognisedPacketType(packet_type)
 
 
 def packet_from_bytes(data: bytes) -> Packet:
@@ -304,8 +297,8 @@ def packet_from_bytes(data: bytes) -> Packet:
     does not match the size of the struct
     determined by the packet type value pulled from ``data``.
     """
-    base_packet = PacketBase.from_buffer_copy(data)
-    struct = packet_structure(base_packet.packet_type)
+    packet = PacketBase.from_buffer_copy(data)
+    struct = packet.struct_type()
     if len(data) != struct.SIZE:
         raise racetools.errors.PacketSizeMismatch(struct.SIZE, len(data))
     return struct.from_buffer_copy(data)

@@ -10,11 +10,10 @@ class TestPacketStream(unittest.TestCase):
         data = io.BytesIO()
         packet_stream = pcars_udp.PacketStream(data)
         packet_stream.send(pcars_udp.GameStateData(
-            packet_type=pcars_udp.GameStateData.PACKET_TYPE,
+            base=pcars_udp.PacketBase(packet_type=4),
             game_state=123,
             wind_direction_y=64))
         packet_stream.send(pcars_udp.TelemetryData(
-            packet_type=pcars_udp.TelemetryData.PACKET_TYPE,
             speed=12.34,
             brake_bias=50))
         data.seek(0)
@@ -44,7 +43,6 @@ class TestPacketStream(unittest.TestCase):
         packet_stream = pcars_udp.PacketStream(data)
         with self.assertRaises(racetools.errors.StreamWriteError) as ex:
             packet_stream.send(pcars_udp.TelemetryData(
-                packet_type=pcars_udp.TelemetryData.PACKET_TYPE,
                 speed=12.34))
-        self.assertEqual(557, ex.exception.expected)
+        self.assertEqual(pcars_udp.TelemetryData.SIZE + 2, ex.exception.expected)
         self.assertEqual(64, ex.exception.actual)
