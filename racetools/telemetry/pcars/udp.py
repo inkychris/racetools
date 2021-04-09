@@ -357,8 +357,7 @@ class PacketStream:
         does not match the size of the packet and header.
         """
         packet_size_data = packet.SIZE.to_bytes(2, 'little')
-        write_count = self._stream.write(packet_size_data)
-        write_count += self._stream.write(packet)
+        write_count = self._stream.write(packet_size_data + packet)
         if write_count != packet.SIZE + 2:
             raise racetools.errors.StreamWriteError(packet.SIZE + 2, write_count)
 
