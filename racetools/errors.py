@@ -27,3 +27,13 @@ class StreamWriteError(ValueError):
         self.expected = expected
         self.actual = actual
         super().__init__(f'expected to write {self.expected} bytes to stream, wrote {self.actual}')
+
+
+class MissingPacket(ValueError):
+    """
+    Raised when attempting to retrieve data
+    from a packet that hasn't been received yet.
+    """
+    def __init__(self, packet_type):
+        self.packet_type = packet_type
+        super().__init__(f'packet of type {packet_type.__qualname__} could not be found')

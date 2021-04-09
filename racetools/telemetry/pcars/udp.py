@@ -59,6 +59,8 @@ class PacketBase(ctypes.Structure):
 
 class Packet(ctypes.Structure):
     SIZE = None
+    PARTIAL_ARRAY_SIZE = None
+    STR_FIELDS = []
 
 
 class UnpackedPacket(Packet):
@@ -74,6 +76,8 @@ class PackedPacket(Packet):
 
 class TelemetryData(PackedPacket):
     SIZE = 559
+
+    STR_FIELDS = ['type_compound']
 
     _fields_ = [
         ('viewed_participant_index', ctypes.c_int8),
@@ -150,6 +154,13 @@ class TelemetryData(PackedPacket):
 class RaceData(UnpackedPacket):
     SIZE = 308
 
+    STR_FIELDS = [
+        'track_location',
+        'track_variation',
+        'translated_track_location',
+        'translated_track_variation',
+    ]
+
     _fields_ = [
         ('world_fastest_lap_time', ctypes.c_float),
         ('personal_fastest_lap_time', ctypes.c_float),
@@ -171,12 +182,15 @@ class RaceData(UnpackedPacket):
 
 class ParticipantsData(UnpackedPacket):
     SIZE = 1136
+    PARTIAL_ARRAY_SIZE = PARTICIPANTS_PER_PACKET
+
+    STR_FIELDS = ['name']
 
     _fields_ = [
         ('participants_changed_timestamp', ctypes.c_uint32),
-        ('name', (ctypes.c_char * PARTICIPANT_NAME_LENGTH_MAX) * PARTICIPANTS_PER_PACKET),
-        ('nationality', ctypes.c_uint32 * PARTICIPANTS_PER_PACKET),
-        ('index', ctypes.c_uint16 * PARTICIPANTS_PER_PACKET),
+        ('name', (ctypes.c_char * PARTICIPANT_NAME_LENGTH_MAX) * PARTIAL_ARRAY_SIZE),
+        ('nationality', ctypes.c_uint32 * PARTIAL_ARRAY_SIZE),
+        ('index', ctypes.c_uint16 * PARTIAL_ARRAY_SIZE),
     ]
 
 
@@ -270,9 +284,12 @@ class VehicleInfo(ctypes.Structure):
 
 class ParticipantVehicleNamesData(UnpackedPacket):
     SIZE = 1164
+    PARTIAL_ARRAY_SIZE = VEHICLES_PER_PACKET
+
+    STR_FIELDS = ['vehicles.name']
 
     _fields_ = [
-        ('vehicles', VehicleInfo * VEHICLES_PER_PACKET),
+        ('vehicles', VehicleInfo * PARTIAL_ARRAY_SIZE),
     ]
 
 
@@ -285,9 +302,12 @@ class ClassInfo(ctypes.Structure):
 
 class VehicleClassNamesData(UnpackedPacket):
     SIZE = 1452
+    PARTIAL_ARRAY_SIZE = CLASSES_SUPPORTED_PER_PACKET
+
+    STR_FIELDS = ['classes.name']
 
     _fields_ = [
-        ('classes', ClassInfo * CLASSES_SUPPORTED_PER_PACKET),
+        ('classes', ClassInfo * PARTIAL_ARRAY_SIZE),
     ]
 
 
@@ -341,3 +361,55 @@ class PacketStream:
         write_count += self._stream.write(packet)
         if write_count != packet.SIZE + 2:
             raise racetools.errors.StreamWriteError(packet.SIZE + 2, write_count)
+
+
+_packet_types = (
+    TelemetryData,
+    RaceData,
+    ParticipantsData,
+    TimingsData,
+    GameStateData,
+    TimeStatsData,
+    ParticipantVehicleNamesData,
+    VehicleClassNamesData,
+)
+
+
+class Data:
+    """
+    Aggregate of UDP packets to be passed to views.
+    """
+    def __init__(self):
+        self._data = {struct: {} for struct in _packet_types}
+
+    def update(self, packet: Packet) -> None:
+        packet_type = type(packet)
+        partial_index = packet.base.partial_packet_index - 1
+        self._data[packet_type][partial_index] = packet
+
+    def get(
+            self,
+            packet_type: typing.Type[Packet],
+            key: str, *,
+            array_index: int = None,
+            array_key: str = None):
+        partial_packet_index = 0
+        if None not in (array_index, packet_type.PARTIAL_ARRAY_SIZE):
+            partial_packet_index = array_index // packet_type.PARTIAL_ARRAY_SIZE
+        value = self._data[packet_type].get(partial_packet_index)
+        if value is None:
+            raise racetools.errors.MissingPacket(packet_type)
+        for component in key.split('.'):
+            value = getattr(value, component)
+        if array_index is not None:
+            relative_index = array_index
+            if packet_type.PARTIAL_ARRAY_SIZE is not None:
+                relative_index %= packet_type.PARTIAL_ARRAY_SIZE
+            value = value[relative_index]
+        str_key = key
+        if array_key:
+            str_key = f'{str_key}.{array_key}'
+            value = getattr(value, array_key)
+        if str_key in packet_type.STR_FIELDS:
+            return bytes(value).partition(b'\0')[0].decode('utf-8')
+        return value
