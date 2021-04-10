@@ -3,8 +3,8 @@ class UnrecognisedPacketType(ValueError):
     Raised when numerical packet type
     does not correspond to a packet structure.
     """
-    def __init__(self, value):
-        super().__init__(f'unrecognised packet type value {value}')
+    def __init__(self, value, version):
+        super().__init__(f'unrecognised packet type value={value}, version={version}')
 
 
 class PacketSizeMismatch(ValueError):

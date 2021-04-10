@@ -41,45 +41,46 @@ class TestStructSizes(unittest.TestCase):
 
 
 class TestStructType(unittest.TestCase):
-    def assertStructMapping(self, packet_type, expected_struct, partial_packet_index=1, partial_packet_total=1):
+    def assertStructMapping(
+            self, packet_type, packet_version, expected_struct, partial_packet_index=1, partial_packet_total=1):
         packet = pcars_udp.PacketBase.from_buffer_copy(bytearray([
             0, 0, 0, 0,
             0, 0, 0, 0,
             partial_packet_index,
             partial_packet_total,
             packet_type,
-            0]))
+            packet_version]))
         self.assertEqual(expected_struct, packet.struct_type())
 
     def test_telemetry_data(self):
-        self.assertStructMapping(0, pcars_udp.TelemetryData)
+        self.assertStructMapping(0, 4, pcars_udp.TelemetryData)
 
     def test_race_data(self):
-        self.assertStructMapping(1, pcars_udp.RaceData)
+        self.assertStructMapping(1, 1, pcars_udp.RaceData)
 
     def test_participants_data(self):
-        self.assertStructMapping(2, pcars_udp.ParticipantsData)
+        self.assertStructMapping(2, 3, pcars_udp.ParticipantsData)
 
     def test_timings_data(self):
-        self.assertStructMapping(3, pcars_udp.TimingsData)
+        self.assertStructMapping(3, 1, pcars_udp.TimingsData)
 
     def test_game_state_data(self):
-        self.assertStructMapping(4, pcars_udp.GameStateData)
+        self.assertStructMapping(4, 2, pcars_udp.GameStateData)
 
     def test_time_stats_data(self):
-        self.assertStructMapping(7, pcars_udp.TimeStatsData)
+        self.assertStructMapping(7, 2, pcars_udp.TimeStatsData)
 
     def test_participant_vehicle_names_data(self):
         self.assertStructMapping(
-            8, pcars_udp.ParticipantVehicleNamesData,
+            8, 2, pcars_udp.ParticipantVehicleNamesData,
             partial_packet_index=1, partial_packet_total=2)
 
     def test_vehicle_class_names_data(self):
         self.assertStructMapping(
-            8, pcars_udp.VehicleClassNamesData,
+            8, 2, pcars_udp.VehicleClassNamesData,
             partial_packet_index=2, partial_packet_total=2)
 
     def test_invalid_value(self):
         with self.assertRaises(racetools.errors.UnrecognisedPacketType) as ex:
-            self.assertStructMapping(9, None)
+            self.assertStructMapping(9, 0, None)
         self.assertIn('9', str(ex.exception))

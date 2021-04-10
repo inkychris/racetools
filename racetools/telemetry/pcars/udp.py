@@ -37,29 +37,30 @@ class PacketBase(ctypes.Structure):
         Raises an ``UnrecognisedPacketType`` exception
         if the struct type cannot be determined.
         """
-        if self.packet_type == 0:
-            return TelemetryData
-        elif self.packet_type == 1:
-            return RaceData
-        elif self.packet_type == 2:
-            return ParticipantsData
-        elif self.packet_type == 3:
-            return TimingsData
-        elif self.packet_type == 4:
-            return GameStateData
-        elif self.packet_type == 7:
-            return TimeStatsData
-        elif self.packet_type == 8:
-            if self.partial_packet_index < self.partial_packet_number:
-                return ParticipantVehicleNamesData
-            elif self.partial_packet_index == self.partial_packet_number:
-                return VehicleClassNamesData
-        raise racetools.errors.UnrecognisedPacketType(self.packet_type)
+        for packet_type in (
+                TelemetryData,
+                RaceData,
+                ParticipantsData,
+                TimingsData,
+                GameStateData,
+                TimeStatsData):
+            if self.packet_type == packet_type.TYPE and self.packet_version == packet_type.VERSION:
+                return packet_type
+        if self.packet_type == ParticipantVehicleNamesData.TYPE:
+            if self.partial_packet_index == self.partial_packet_number:
+                packet_type = VehicleClassNamesData
+            else:
+                packet_type = ParticipantVehicleNamesData
+            if self.packet_version == packet_type.VERSION:
+                return packet_type
+        raise racetools.errors.UnrecognisedPacketType(self.packet_type, self.packet_version)
 
 
 class Packet(ctypes.Structure):
-    SIZE = None
-    PARTIAL_ARRAY_SIZE = None
+    SIZE: int = None
+    PARTIAL_ARRAY_SIZE: int = None
+    TYPE: int = None
+    VERSION: int = None
 
 
 class UnpackedPacket(Packet):
@@ -75,6 +76,8 @@ class PackedPacket(Packet):
 
 class TelemetryData(PackedPacket):
     SIZE = 559
+    TYPE = 0
+    VERSION = 4  # SMS header incorrect
 
     _fields_ = [
         ('viewed_participant_index', ctypes.c_int8),
@@ -150,6 +153,8 @@ class TelemetryData(PackedPacket):
 
 class RaceData(UnpackedPacket):
     SIZE = 308
+    TYPE = 1
+    VERSION = 1
 
     _fields_ = [
         ('world_fastest_lap_time', ctypes.c_float),
@@ -173,6 +178,8 @@ class RaceData(UnpackedPacket):
 class ParticipantsData(UnpackedPacket):
     SIZE = 1136
     PARTIAL_ARRAY_SIZE = PARTICIPANTS_PER_PACKET
+    TYPE = 2
+    VERSION = 3  # SMS header incorrect
 
     _fields_ = [
         ('participants_changed_timestamp', ctypes.c_uint32),
@@ -204,6 +211,8 @@ class ParticipantsInfo(ctypes.Structure):
 
 class TimingsData(PackedPacket):
     SIZE = 1063
+    TYPE = 3
+    VERSION = 1  # SMS header incorrect
 
     _fields_ = [
         ('num_participants', ctypes.c_int8),
@@ -220,6 +229,8 @@ class TimingsData(PackedPacket):
 
 class GameStateData(UnpackedPacket):
     SIZE = 24
+    TYPE = 4
+    VERSION = 2
 
     _fields_ = [
         ('build_version_number', ctypes.c_uint16),
@@ -255,6 +266,8 @@ class ParticipantsStats(ctypes.Structure):
 
 class TimeStatsData(UnpackedPacket):
     SIZE = 1040  # SMS header off by 16
+    TYPE = 7
+    VERSION = 2
 
     _fields_ = [
         ('participants_changed_timestamp', ctypes.c_uint32),
@@ -273,6 +286,8 @@ class VehicleInfo(ctypes.Structure):
 class ParticipantVehicleNamesData(UnpackedPacket):
     SIZE = 1164
     PARTIAL_ARRAY_SIZE = VEHICLES_PER_PACKET
+    TYPE = 8
+    VERSION = 2
 
     _fields_ = [
         ('vehicles', VehicleInfo * PARTIAL_ARRAY_SIZE),
@@ -289,6 +304,8 @@ class ClassInfo(ctypes.Structure):
 class VehicleClassNamesData(UnpackedPacket):
     SIZE = 1452
     PARTIAL_ARRAY_SIZE = CLASSES_SUPPORTED_PER_PACKET
+    TYPE = 8
+    VERSION = 2
 
     _fields_ = [
         ('classes', ClassInfo * PARTIAL_ARRAY_SIZE),
@@ -346,24 +363,20 @@ class PacketStream:
             raise racetools.errors.StreamWriteError(packet.SIZE + 2, write_count)
 
 
-_packet_types = (
-    TelemetryData,
-    RaceData,
-    ParticipantsData,
-    TimingsData,
-    GameStateData,
-    TimeStatsData,
-    ParticipantVehicleNamesData,
-    VehicleClassNamesData,
-)
-
-
 class Data:
     """
     Aggregate of UDP packets to be passed to views.
     """
     def __init__(self):
-        self._data = {struct: {} for struct in _packet_types}
+        self._data = {struct: {} for struct in (
+            TelemetryData,
+            RaceData,
+            ParticipantsData,
+            TimingsData,
+            GameStateData,
+            TimeStatsData,
+            ParticipantVehicleNamesData,
+            VehicleClassNamesData)}
 
     def update(self, packet: Packet) -> None:
         packet_type = type(packet)

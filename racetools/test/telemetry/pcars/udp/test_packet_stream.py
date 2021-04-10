@@ -10,10 +10,11 @@ class TestPacketStream(unittest.TestCase):
         data = io.BytesIO()
         packet_stream = pcars_udp.PacketStream(data)
         packet_stream.send(pcars_udp.GameStateData(
-            base=pcars_udp.PacketBase(packet_type=4),
+            base=pcars_udp.PacketBase(packet_type=4, packet_version=2),
             game_state=123,
             wind_direction_y=64))
         packet_stream.send(pcars_udp.TelemetryData(
+            base=pcars_udp.PacketBase(packet_type=0, packet_version=4),
             speed=12.34,
             brake_bias=50))
         data.seek(0)
