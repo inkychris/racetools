@@ -1,5 +1,6 @@
 from __future__ import annotations
 import ctypes
+import socket
 import typing
 
 import racetools.errors
@@ -361,6 +362,39 @@ class PacketStream:
         write_count = self._stream.write(packet_size_data + packet)
         if write_count != packet.SIZE + 2:
             raise racetools.errors.StreamWriteError(packet.SIZE + 2, write_count)
+
+
+class Socket:
+    """
+    Context manager to receive packets from UDP.
+    """
+    def __init__(self, timeout: float = None):
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._socket.bind(('', PORT))
+        self._socket.settimeout(timeout)
+
+    def close(self) -> None:
+        """
+        Close the UDP socket.
+        """
+        self._socket.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def receive(self) -> Packet:
+        """
+        Read data from UDP socket
+        and attempt to return a ``Packet``.
+        """
+        try:
+            return packet_from_bytes(self._socket.recvfrom(MAX_PACKET_SIZE)[0])
+        except socket.timeout:
+            raise racetools.errors.PacketError('timeout reached waiting for UDP packet') from None
 
 
 class Data:
