@@ -1,6 +1,7 @@
 import unittest
 
 import racetools.errors
+import racetools.util.types as types
 import racetools.telemetry.pcars.udp as pcars_udp
 
 
@@ -37,7 +38,8 @@ class TestData(unittest.TestCase):
         data.update(packet(3, 3))
         for i in (10, 20, 40):
             with self.subTest(index=i):
-                self.assertEqual(f'name_{i}', data.get(pcars_udp.ParticipantsData, 'name', array_index=i))
+                value = data.get(pcars_udp.ParticipantsData, 'name', array_index=i)
+                self.assertEqual(f'name_{i}', types.c_string_to_str(value))
 
     def test_array_sub_attribute(self):
         data = pcars_udp.Data()

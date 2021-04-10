@@ -60,7 +60,6 @@ class PacketBase(ctypes.Structure):
 class Packet(ctypes.Structure):
     SIZE = None
     PARTIAL_ARRAY_SIZE = None
-    STR_FIELDS = []
 
 
 class UnpackedPacket(Packet):
@@ -76,8 +75,6 @@ class PackedPacket(Packet):
 
 class TelemetryData(PackedPacket):
     SIZE = 559
-
-    STR_FIELDS = ['type_compound']
 
     _fields_ = [
         ('viewed_participant_index', ctypes.c_int8),
@@ -154,13 +151,6 @@ class TelemetryData(PackedPacket):
 class RaceData(UnpackedPacket):
     SIZE = 308
 
-    STR_FIELDS = [
-        'track_location',
-        'track_variation',
-        'translated_track_location',
-        'translated_track_variation',
-    ]
-
     _fields_ = [
         ('world_fastest_lap_time', ctypes.c_float),
         ('personal_fastest_lap_time', ctypes.c_float),
@@ -183,8 +173,6 @@ class RaceData(UnpackedPacket):
 class ParticipantsData(UnpackedPacket):
     SIZE = 1136
     PARTIAL_ARRAY_SIZE = PARTICIPANTS_PER_PACKET
-
-    STR_FIELDS = ['name']
 
     _fields_ = [
         ('participants_changed_timestamp', ctypes.c_uint32),
@@ -286,8 +274,6 @@ class ParticipantVehicleNamesData(UnpackedPacket):
     SIZE = 1164
     PARTIAL_ARRAY_SIZE = VEHICLES_PER_PACKET
 
-    STR_FIELDS = ['vehicles.name']
-
     _fields_ = [
         ('vehicles', VehicleInfo * PARTIAL_ARRAY_SIZE),
     ]
@@ -303,8 +289,6 @@ class ClassInfo(ctypes.Structure):
 class VehicleClassNamesData(UnpackedPacket):
     SIZE = 1452
     PARTIAL_ARRAY_SIZE = CLASSES_SUPPORTED_PER_PACKET
-
-    STR_FIELDS = ['classes.name']
 
     _fields_ = [
         ('classes', ClassInfo * PARTIAL_ARRAY_SIZE),
@@ -405,10 +389,6 @@ class Data:
             if packet_type.PARTIAL_ARRAY_SIZE is not None:
                 relative_index %= packet_type.PARTIAL_ARRAY_SIZE
             value = value[relative_index]
-        str_key = key
         if array_key:
-            str_key = f'{str_key}.{array_key}'
             value = getattr(value, array_key)
-        if str_key in packet_type.STR_FIELDS:
-            return bytes(value).partition(b'\0')[0].decode('utf-8')
         return value
