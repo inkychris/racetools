@@ -41,6 +41,10 @@ class TestData(unittest.TestCase):
                 value = data.get(pcars_udp.ParticipantsData, 'name', array_index=i)
                 self.assertEqual(f'name_{i}', types.c_string_to_str(value))
 
+        with self.assertRaises(racetools.errors.MissingPacket):
+            index = (3 * pcars_udp.ParticipantsData.PARTIAL_ARRAY_SIZE) + 5
+            data.get(pcars_udp.ParticipantsData, 'name', array_index=index)
+
     def test_array_sub_attribute(self):
         data = pcars_udp.Data()
         packet = pcars_udp.TimeStatsData(
