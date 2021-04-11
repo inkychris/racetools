@@ -8,6 +8,7 @@ author = "Chris Wright"
 author-email = "chris@inkyspider.co.uk"
 home-page = "https://github.com/inkychris/racetools"
 requires-python = ">=3.9"
+description-file = "README.md"
 
 [tool.coverage.run]
 command_line = "-m unittest"
