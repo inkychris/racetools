@@ -268,7 +268,7 @@ class ParticipantsStats(ctypes.Structure):
 class TimeStatsData(UnpackedPacket):
     SIZE = 1040  # SMS header off by 16
     TYPE = 7
-    VERSION = 2
+    VERSION = 1  # SMS header incorrect
 
     _fields_ = [
         ('participants_changed_timestamp', ctypes.c_uint32),

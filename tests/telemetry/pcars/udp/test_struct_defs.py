@@ -68,7 +68,7 @@ class TestStructType(unittest.TestCase):
         self.assertStructMapping(4, 2, pcars_udp.GameStateData)
 
     def test_time_stats_data(self):
-        self.assertStructMapping(7, 2, pcars_udp.TimeStatsData)
+        self.assertStructMapping(7, 1, pcars_udp.TimeStatsData)
 
     def test_participant_vehicle_names_data(self):
         self.assertStructMapping(
