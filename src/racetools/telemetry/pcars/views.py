@@ -28,8 +28,8 @@ class _IndexedDataView(_DataView, abc.ABC):
 class GameView(_DataView):
     """
     Query the state of the game.
-    Note that "INGAME_PAUSED" and "EXITED" states
-    do not appear to be sent by Project Cars 2 via UDP.
+    Note that "INGAME_PAUSED" does not appear
+    to be sent by Project Cars 2 via UDP.
     """
 
     @property
