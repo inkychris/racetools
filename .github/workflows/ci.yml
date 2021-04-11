@@ -1,5 +1,5 @@
 name: CI
-on: [push]
+on: [push, release]
 
 jobs:
   build:
@@ -50,3 +50,17 @@ jobs:
       - uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: true
+
+  deploy:
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    needs: [build, test, coverage]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: packages
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: ${{ secrets.PYPI_USERNAME }}
+          password: ${{ secrets.PYPI_TOKEN }}
