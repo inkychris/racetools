@@ -394,7 +394,7 @@ class Socket:
         try:
             return packet_from_bytes(self._socket.recvfrom(MAX_PACKET_SIZE)[0])
         except socket.timeout:
-            raise racetools.errors.PacketError('timeout reached waiting for UDP packet') from None
+            raise racetools.errors.Timeout('timeout reached waiting for UDP packet') from None
 
 
 class Data:
