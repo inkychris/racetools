@@ -46,3 +46,33 @@ class TestGameView(unittest.TestCase):
             with self.subTest(game_state=i):
                 self.data.udp.update(game_state_packet(game_state=240 + i))
                 self.assertTrue(self.view.in_session)
+
+
+class TestSessionView(unittest.TestCase):
+    def setUp(self) -> None:
+        self.data = pcars_views.DataSet()
+        self.view = pcars_views.SessionView(self.data)
+
+    def test_is_practice(self):
+        self.data.udp.update(game_state_packet(game_state=1 << 4))
+        self.assertTrue(self.view.is_practice)
+
+    def test_is_test(self):
+        self.data.udp.update(game_state_packet(game_state=2 << 4))
+        self.assertTrue(self.view.is_test)
+
+    def test_is_qualifying(self):
+        self.data.udp.update(game_state_packet(game_state=3 << 4))
+        self.assertTrue(self.view.is_qualifying)
+
+    def test_is_formation_lap(self):
+        self.data.udp.update(game_state_packet(game_state=4 << 4))
+        self.assertTrue(self.view.is_formation_lap)
+
+    def test_is_race(self):
+        self.data.udp.update(game_state_packet(game_state=5 << 4))
+        self.assertTrue(self.view.is_race)
+
+    def test_is_time_trial(self):
+        self.data.udp.update(game_state_packet(game_state=6 << 4))
+        self.assertTrue(self.view.is_time_trial)

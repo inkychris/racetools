@@ -85,3 +85,62 @@ class GameView(_DataView):
         either in a session, or from the main menu.
         """
         return self.state in (pcars_enums.GameState.FRONT_END_REPLAY, pcars_enums.GameState.INGAME_REPLAY)
+
+
+class SessionView(_DataView):
+    """
+    Query the state of the session.
+    """
+
+    @property
+    def state(self) -> pcars_enums.SessionState:
+        """
+        Return the raw session state enum value.
+        """
+        raw = self._get_udp(pcars_udp.GameStateData, 'game_state')
+        return pcars_enums.SessionState(raw >> 4)
+
+    @property
+    def is_practice(self) -> bool:
+        """
+        Returns ``True`` if player is in a practice session.
+        """
+        return self.state == pcars_enums.SessionState.PRACTICE
+
+    @property
+    def is_test(self):
+        """
+        Returns ``True`` if player is in a test session.
+        This has not yet been reproduced in game
+        so this property may be of limited use.
+        """
+        return self.state == pcars_enums.SessionState.TEST
+
+    @property
+    def is_qualifying(self):
+        """
+        Returns ``True`` if player is in a qualifying session.
+        """
+        return self.state == pcars_enums.SessionState.QUALIFY
+
+    @property
+    def is_formation_lap(self):
+        """
+        Returns ``True`` if player is on a formation lap.
+        """
+        return self.state == pcars_enums.SessionState.FORMATION_LAP
+
+    @property
+    def is_race(self):
+        """
+        Returns ``True`` if player is in a race session.
+        Returns ``False`` when in a race but on a formation lap.
+        """
+        return self.state == pcars_enums.SessionState.RACE
+
+    @property
+    def is_time_trial(self):
+        """
+        Returns ``True`` if player is in a time-trial session.
+        """
+        return self.state == pcars_enums.SessionState.TIME_ATTACK
