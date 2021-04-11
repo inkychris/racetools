@@ -1,0 +1,52 @@
+name: CI
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install flit~=3.2
+      - run: flit build
+      - uses: actions/upload-artifact@v2
+        with:
+          name: packages
+          path: dist/*
+
+  test:
+    runs-on: windows-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: packages
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install coverage[toml]~=5.5
+      - run: pip install $(gci *.whl)
+      - run: coverage run
+      - uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: .coverage*
+
+  coverage:
+    runs-on: windows-latest
+    needs: [test]
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install coverage[toml]~=5.5
+      - uses: actions/download-artifact@v2
+        with:
+          name: coverage-report
+      - run: coverage combine
+      - uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
