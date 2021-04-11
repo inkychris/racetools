@@ -88,6 +88,10 @@ class GameView(_DataView):
 
 
 class SessionView(_DataView):
+    """
+    Query the state of the session.
+    """
+
     @property
     def state(self) -> pcars_enums.SessionState:
         """
@@ -107,6 +111,8 @@ class SessionView(_DataView):
     def is_test(self):
         """
         Returns ``True`` if player is in a test session.
+        This has not yet been reproduced in game
+        so this property may be of limited use.
         """
         return self.state == pcars_enums.SessionState.TEST
 
