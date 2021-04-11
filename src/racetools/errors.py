@@ -43,3 +43,10 @@ class StreamWriteError(ValueError):
         self.expected = expected
         self.actual = actual
         super().__init__(f'expected to write {self.expected} bytes to stream, wrote {self.actual}')
+
+
+class Timeout(RuntimeError):
+    """
+    Raised when a process timeout is reached.
+    """
+    pass

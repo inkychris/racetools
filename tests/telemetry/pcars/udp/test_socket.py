@@ -69,5 +69,5 @@ class TestSocket(unittest.TestCase):
 
     def test_timeout(self):
         with pcars_udp.Socket(timeout=0.01) as udp_socket:
-            with self.assertRaises(racetools.errors.PacketError):
+            with self.assertRaises(racetools.errors.Timeout):
                 udp_socket.receive()
