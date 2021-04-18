@@ -1,5 +1,7 @@
 import abc
 
+import racetools.util.types
+
 import racetools.telemetry.pcars.enums as pcars_enums
 import racetools.telemetry.pcars.udp as pcars_udp
 
@@ -144,3 +146,44 @@ class SessionView(_DataView):
         Returns ``True`` if player is in a time-trial session.
         """
         return self.state == pcars_enums.SessionState.TIME_ATTACK
+
+
+class ParticipantView(_IndexedDataView):
+    """
+    Retrieve properties on a participant in a session.
+    """
+    @property
+    def _session_index1(self):
+        return self._get_udp(pcars_udp.ParticipantsData, key='index', array_index=self._index)
+
+    @property
+    def _session_index2(self):
+        return self._get_udp_timings_participants('participant_index')
+
+    @property
+    def name(self) -> str:
+        raw = self._get_udp(pcars_udp.ParticipantsData, key='name', array_index=self._index)
+        return racetools.util.types.c_string_to_str(raw)
+
+    def _get_udp_timings_participants(self, key):
+        return self._get_udp(
+            pcars_udp.TimingsData,
+            key='participants',
+            array_index=self._index,
+            array_key=key)
+
+    @property
+    def is_active(self) -> bool:
+        return bool(self._get_udp_timings_participants('race_position') >> 7)
+
+    @property
+    def is_human(self) -> bool:
+        return bool(self._get_udp_timings_participants('car_index') >> 15)
+
+    @property
+    def race_position(self) -> int:
+        return self._get_udp_timings_participants('race_position') & 0b01111111
+
+    @property
+    def sector(self) -> int:
+        return self._get_udp_timings_participants('sector') & 0b00000011
